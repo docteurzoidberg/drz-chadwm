@@ -1,0 +1,19 @@
+#!/bin/bash
+
+echo "directories"
+mkdir -p ~/.local/drzdwm
+mkdir -p ~/.config/rofi
+
+echo "scripts"
+cp -R -u ./scripts/* ~/.local/drzdwm
+
+echo "rofi"
+cp -r -u ./rofi/* ~/.config/rofi
+
+echo "xresources"
+cp -r -u ./Xresources ~/.Xresources
+
+echo "drzdwm.desktop"
+sudo cp -f ./drzdwm.desktop /usr/share/xsessions/drzdwm.desktop
+
+exit 0
