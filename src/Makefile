@@ -26,26 +26,27 @@ dwm: ${OBJ}
 	${CC} -o $@ ${OBJ} ${LDFLAGS}
 
 clean:
-	rm -f dwm ${OBJ} dwm-${VERSION}.tar.gz config.h
+	rm -f dwm config.h ${OBJ} dwm-${VERSION}.tar.gz
 
 dist: clean
-	mkdir -p dwm-${VERSION}
+	mkdir -p drzdwm-${VERSION}
 	cp -R LICENSE Makefile README config.def.h config.mk\
-		dwm.1 drw.h util.h ${SRC} dwm.png transient.c dwm-${VERSION}
-	tar -cf dwm-${VERSION}.tar dwm-${VERSION}
-	gzip dwm-${VERSION}.tar
-	rm -rf dwm-${VERSION}
+		dwm.1 drw.h util.h ${SRC} drzdwm.png transient.c drzdwm-${VERSION}
+	tar -cf dwm-${VERSION}.tar drzdwm-${VERSION}
+	gzip drzdwm-${VERSION}.tar
+	rm -rf drzdwm-${VERSION}
 
 install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin
-	cp -f dwm ${DESTDIR}${PREFIX}/bin/chadwm
-	chmod 755 ${DESTDIR}${PREFIX}/bin/chadwm
+	cp -f dwm ${DESTDIR}${PREFIX}/bin/drzdwm
+	chmod 755 ${DESTDIR}${PREFIX}/bin/drzdwm
+	cp -f drzdwm.desktop /usr/share/xsessions/drzdwm.desktop
 	mkdir -p ${DESTDIR}${MANPREFIX}/man1
-	sed "s/VERSION/${VERSION}/g" < dwm.1 > ${DESTDIR}${MANPREFIX}/man1/dwm.1
-	chmod 644 ${DESTDIR}${MANPREFIX}/man1/dwm.1
+	sed "s/VERSION/${VERSION}/g" < dwm.1 > ${DESTDIR}${MANPREFIX}/man1/drzdwm.1
+	chmod 644 ${DESTDIR}${MANPREFIX}/man1/drzdwm.1
 
 uninstall:
-	rm -f ${DESTDIR}${PREFIX}/bin/chadwm\
-		${DESTDIR}${MANPREFIX}/man1/dwm.1
+	rm -f ${DESTDIR}${PREFIX}/bin/drzdwm\
+		${DESTDIR}${MANPREFIX}/man1/drzdwm.1
 
 .PHONY: all options clean dist install uninstall
