@@ -7,4 +7,4 @@ xset r rate 200 50 &
 picom &
 
 dash ~/.local/drzdwm/drzbar.sh &
-while type drzdwm >/dev/null; do chadwm && continue || break; done
+while type drzdwm >/dev/null; do drzdwm && continue || break; done

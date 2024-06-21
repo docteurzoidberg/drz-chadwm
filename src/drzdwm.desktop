@@ -1,7 +1,7 @@
 [Desktop Entry]
 Encoding=UTF-8
-Name=assdwm
-Content=ASS Dynamic Window Manager
-Exec=/home/ass/.local/drzdwm/drzrun.sh
-Icon=assdwm
+Name=drzdwm
+Content=DRZ Dynamic Window Manager
+Exec=/home/drzoid/.local/drzdwm/drzrun.sh
+Icon=drzdwm
 Type=XSession

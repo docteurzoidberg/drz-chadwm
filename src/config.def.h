@@ -3,8 +3,8 @@
 #include <X11/XF86keysym.h>
 
 /* appearance */
-static const unsigned int borderpx  = 0;        /* border pixel of windows */
-static const unsigned int default_border = 0;   /* to switch back to default border after dynamic border resizing via keybinds */
+static const unsigned int borderpx  = 2;        /* border pixel of windows */
+static const unsigned int default_border = 1;   /* to switch back to default border after dynamic border resizing via keybinds */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const unsigned int gappih    = 10;       /* horiz inner gap between windows */
 static const unsigned int gappiv    = 10;       /* vert inner gap between windows */
@@ -14,7 +14,7 @@ static const int smartgaps          = 0;        /* 1 means no outer gap when the
 static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayspacing = 2;   /* systray spacing */
 static const int systraypinningfailfirst = 1;   /* 1: if pinning fails,display systray on the 1st monitor,False: display systray on last monitor*/
-static const int showsystray        = 1;        /* 0 means no systray */
+static const int showsystray        = 0;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int showtab            = showtab_auto;
 static const int toptab             = 1;        /* 0 means bottom tab */
@@ -37,10 +37,10 @@ static const int new_window_attach_on_end = 0; /*  1 means the new window will a
 #define ICONSIZE 19   /* icon size */
 #define ICONSPACING 8 /* space between icon and title */
 
-static const char *fonts[]          = {"Iosevka:style:medium:size=12" ,"JetBrainsMono Nerd Font Mono:style:medium:size=19" };
+static const char *fonts[]          = {"Iosevka:style:medium:size=16" ,"JetBrainsMono Nerd Font Mono:style:medium:size=19" };
 
 // theme
-#include "themes/onedark.h"
+#include "themes/gruvchad.h"
 
 static const char *colors[][3]      = {
     /*                     fg       bg      border */
@@ -59,16 +59,30 @@ static const char *colors[][3]      = {
     [SchemeBtnPrev]    = { green,   black,  black },
     [SchemeBtnNext]    = { yellow,  black,  black },
     [SchemeBtnClose]   = { red,     black,  black },
+}; 
+
+typedef struct {
+	const char *name;
+	const void *cmd;
+} Sp;
+const char *spcmd1[] = {"st", "-n", "spterm", "-g", "120x34", NULL };
+const char *spcmd2[] = {"st", "-n", "spfm", "-g", "144x41", "-e", "ranger", NULL };
+const char *spcmd3[] = {"keepassxc", NULL };
+static Sp scratchpads[] = {
+	/* name          cmd  */
+	{"spterm",      spcmd1},
+	{"spranger",    spcmd2},
+	{"keepassxc",   spcmd3},
 };
 
 /* tagging */
-static char *tags[] = {"", "", "", "", ""};
+static char *tags[] = {"", "󰨞", "", "", ""};
 
-static const char* eww[] = { "eww", "open" , "eww", NULL };
+static const char* st[] = { "st", NULL };
 
 static const Launcher launchers[] = {
     /* command     name to display */
-    { eww,         "" },
+    { st,         "" },
 };
 
 static const int tagschemes[] = {
@@ -85,10 +99,16 @@ static const Rule rules[] = {
      *	WM_CLASS(STRING) = instance, class
      *	WM_NAME(STRING) = title
      */
-    /* class      instance    title       tags mask     iscentered   isfloating   monitor */
-    { "Gimp",     NULL,       NULL,       0,            0,           1,           -1 },
-    { "Firefox",  NULL,       NULL,       1 << 8,       0,           0,           -1 },
-    { "eww",      NULL,       NULL,       0,            0,           1,           -1 },
+    /* class      instance    title       tags mask     iscentered   isfloating   monitor */ 
+    { "Firefox-esr",  NULL,       NULL,       1 << 2,       0,           0,           -1 },
+    { "Code",  NULL,       NULL,       1 << 1,       0,           0,           -1 },
+    //{ "cool-reto-term",  NULL,       NULL,       1 << 0,       0,           0,           -1 },  
+    { "st",  NULL,       NULL,       1 << 0,       0,           0,           -1 },
+    { "obsidian",  NULL,       NULL,       1 << 3,       0,           0,           -1 },
+
+    { NULL,		  "spterm",		NULL,		SPTAG(0),		1,			 -1 },
+	{ NULL,		  "spfm",		NULL,		SPTAG(1),		1,			 -1 },
+	{ NULL,		  "keepassxc",	NULL,		SPTAG(2),		0,			 -1 },
 };
 
 /* layout(s) */
@@ -164,6 +184,10 @@ static const Key keys[] = {
     { MODKEY,                           XK_i,       incnmaster,     {.i = +1 } },
     { MODKEY,                           XK_d,       incnmaster,     {.i = -1 } },
 
+	{ MODKEY,            			    XK_y,  	   togglescratch,   {.ui = 0 } },
+	{ MODKEY,            			    XK_u,	   togglescratch,   {.ui = 1 } },
+	{ MODKEY,            			    XK_x,	   togglescratch,   {.ui = 2 } },
+
     // shift view
     { MODKEY,                           XK_Left,    shiftview,      {.i = -1 } },
     { MODKEY,                           XK_Right,   shiftview,      {.i = +1 } },
@@ -227,13 +251,13 @@ static const Key keys[] = {
     { MODKEY|ShiftMask,                 XK_w,       setborderpx,    {.i = default_border } },
 
     // kill dwm
-    { MODKEY|ControlMask,               XK_q,       spawn,        SHCMD("killall bar.sh chadwm") },
+    { MODKEY|ControlMask,               XK_q,       spawn,          SHCMD("killall drzbar.sh drzdwm") },
 
     // kill window
     { MODKEY,                           XK_q,       killclient,     {0} },
 
     // restart
-    { MODKEY|ShiftMask,                 XK_r,       restart,           {0} },
+    { MODKEY|ShiftMask,                 XK_r,       quit,           {1} },
 
     // hide & restore windows
     { MODKEY,                           XK_e,       hidewin,        {0} },

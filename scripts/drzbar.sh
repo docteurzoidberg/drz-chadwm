@@ -6,46 +6,41 @@
 interval=0
 
 # load colors
-. ~/.config/drzdwm/scripts/bar_themes/onedark
+#. ~/.local/drzdwm/bar_themes/onedark
+
+black=#1E1D2D
+green=#b8bb26
+white=#D9E0EE
+grey=#282737
+yellow=#fabd2f
+blue=#83a598
+red=#F28FAD
+darkblue=#458588
+darkyellow=#d79921
+darkred=#F28FAD
+darkgreen=#98971a
 
 cpu() {
   cpu_val=$(grep -o "^[^ ]*" /proc/loadavg)
 
-  printf "^c$black^ ^b$green^ CPU"
-  printf "^c$white^ ^b$grey^ $cpu_val"
-}
-
-pkg_updates() {
-  #updates=$({ timeout 20 doas xbps-install -un 2>/dev/null || true; } | wc -l) # void
-  updates=$({ timeout 20 checkupdates 2>/dev/null || true; } | wc -l) # arch
-  # updates=$({ timeout 20 aptitude search '~U' 2>/dev/null || true; } | wc -l)  # apt (ubuntu, debian etc)
-
-  if [ -z "$updates" ]; then
-    printf "  ^c$green^    Fully Updated"
-  else
-    printf "  ^c$green^    $updates"" updates"
-  fi
+  printf "^b$red^ ^c$black^  "
+  printf "^c$red^^b$black^ $cpu_val"
 }
 
 battery() {
-  get_capacity="$(cat /sys/class/power_supply/BAT1/capacity)"
-  printf "^c$blue^   $get_capacity"
-}
-
-brightness() {
-  printf "^c$red^   "
-  printf "^c$red^%.0f\n" $(cat /sys/class/backlight/*/brightness)
+  get_capacity="$(cat /sys/class/power_supply/axp20x-battery/capacity)"
+  printf "^c$black^ ^b$darkyellow^  ^c$black^^b$yellow^ $get_capacity"
 }
 
 mem() {
-  printf "^c$blue^^b$black^  "
-  printf "^c$blue^ $(free -h | awk '/^Mem/ { print $3 }' | sed s/i//g)"
+  printf "^b$blue^^c$black^  "
+  printf "^c$blue^^b$black^ $(free -h | awk '/^Mem/ { print $3 }' | sed s/i//g)"
 }
 
 wlan() {
 	case "$(cat /sys/class/net/wl*/operstate 2>/dev/null)" in
-	up) printf "^c$black^ ^b$blue^ 󰤨 ^d^%s" " ^c$blue^Connected" ;;
-	down) printf "^c$black^ ^b$blue^ 󰤭 ^d^%s" " ^c$blue^Disconnected" ;;
+	up) printf "^c$black^ ^b$darkgreen^ 󰤨 ^b$black^ " ;;
+	down) printf "^c$black^ ^b$darkred^ 󰤭 ^b$black^ " ;;
 	esac
 }
 
@@ -56,8 +51,8 @@ clock() {
 
 while true; do
 
-  [ $interval = 0 ] || [ $(($interval % 3600)) = 0 ] && updates=$(pkg_updates)
+  [ $interval = 0 ] || [ $(($interval % 3600)) = 0 ]
   interval=$((interval + 1))
 
-  sleep 1 && xsetroot -name "$updates $(battery) $(brightness) $(cpu) $(mem) $(wlan) $(clock)"
+  sleep 1 && xsetroot -name " $(cpu) $(mem) $(wlan) $(battery) $(clock)"
 done

@@ -8,12 +8,12 @@ echo "scripts"
 cp -R -u ./scripts/* ~/.local/drzdwm
 
 echo "rofi"
-cp -r -u ./rofi/* ~/.config/rofi
+cp -r -u ./rofi ~/.config
 
 echo "xresources"
-cp -r -u ./Xresources ~/.Xresources
+cp -r -u ./.Xresources ~/.Xresources
 
 echo "drzdwm.desktop"
-sudo cp -f ./drzdwm.desktop /usr/share/xsessions/drzdwm.desktop
+sudo cp -f ./src/drzdwm.desktop /usr/share/xsessions/drzdwm.desktop
 
 exit 0

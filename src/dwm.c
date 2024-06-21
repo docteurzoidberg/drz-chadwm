@@ -63,7 +63,12 @@
 #define MOUSEMASK (BUTTONMASK | PointerMotionMask)
 #define WIDTH(X) ((X)->w + 2 * (X)->bw)
 #define HEIGHT(X) ((X)->h + 2 * (X)->bw)
-#define TAGMASK ((1 << LENGTH(tags)) - 1)
+
+#define NUMTAGS					(LENGTH(tags) + LENGTH(scratchpads))
+#define TAGMASK     			((1 << NUMTAGS) - 1)
+#define SPTAG(i) 				((1 << LENGTH(tags)) << (i))
+#define SPTAGMASK   			(((1 << LENGTH(scratchpads))-1) << LENGTH(tags))
+
 #define TAGSLENGTH              (LENGTH(tags))
 #define TEXTW(X) (drw_fontset_getwidth(drw, (X)) + lrpad)
 #define MAXTABS 50
@@ -288,7 +293,7 @@ static Client *nexttiled(Client *c);
 static void placemouse(const Arg *arg);
 static void pop(Client *c);
 static void propertynotify(XEvent *e);
-static void restart(const Arg *arg);
+//static void restart(const Arg *arg);
 static Client *recttoclient(int x, int y, int w, int h);
 static Monitor *recttomon(int x, int y, int w, int h);
 static void removesystrayicon(Client *i);
@@ -315,11 +320,14 @@ static void setcfact(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setnumdesktops(void);
 static void setup(void);
+static void quit(const Arg *arg);
 static void setviewport(void);
 static void seturgent(Client *c, int urg);
 static void show(Client *c);
 static void showhide(Client *c);
 static void showtagpreview(int tag);
+static void sighup(int unused);
+static void sigterm(int unused);
 static void sigchld(int unused);
 static void spawn(const Arg *arg);
 static void switchtag(void);
@@ -328,6 +336,7 @@ static void tabmode(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void togglebar(const Arg *arg);
+static void togglescratch(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglefullscr(const Arg *arg);
 static void toggletag(const Arg *arg);
@@ -391,6 +400,7 @@ static void (*handler[LASTEvent])(XEvent *) = {
     [ResizeRequest] = resizerequest,
     [UnmapNotify] = unmapnotify};
 static Atom wmatom[WMLast], netatom[NetLast], xatom[XLast];
+static int restart = 0;
 static int running = 1;
 static Cur *cursor[CurLast];
 static Clr **scheme, clrborder;
@@ -477,6 +487,9 @@ void applyrules(Client *c) {
   class = ch.res_class ? ch.res_class : broken;
   instance = ch.res_name ? ch.res_name : broken;
 
+
+
+
   for (i = 0; i < LENGTH(rules); i++) {
     r = &rules[i];
     if ((!r->title || strstr(c->name, r->title)) &&
@@ -485,6 +498,10 @@ void applyrules(Client *c) {
       c->iscentered = r->iscentered;
       c->isfloating = r->isfloating;
       c->tags |= r->tags;
+			if ((r->tags & SPTAGMASK) && r->isfloating) {
+				c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
+		    c->y = c->mon->wy + (c->mon->wh / 2 - HEIGHT(c) / 2);
+			}
       for (m = mons; m && m->num != r->monitor; m = m->next)
         ;
       if (m)
@@ -496,7 +513,7 @@ void applyrules(Client *c) {
   if (ch.res_name)
     XFree(ch.res_name);
   c->tags =
-      c->tags & TAGMASK ? c->tags & TAGMASK : c->mon->tagset[c->mon->seltags];
+      c->tags = c->tags & TAGMASK ? c->tags & TAGMASK : (c->mon->tagset[c->mon->seltags] & ~SPTAGMASK);
 }
 
 int applysizehints(Client *c, int *x, int *y, int *w, int *h, int interact) {
@@ -1092,6 +1109,7 @@ int drawstatusbar(Monitor *m, int bh, char *stext) {
   drw_setscheme(drw, scheme[LENGTH(colors)]);
   drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
   drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
+  
   drw_rect(drw, x, borderpx, w, bh, 1, 1);
   x += horizpadbar / 2;
 
@@ -1516,14 +1534,14 @@ void drawbar(Monitor *m) {
   w = TEXTW(m->ltsymbol);
   drw_setscheme(drw, scheme[SchemeLayout]);
   x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
-
+/*
   	for (i = 0; i < LENGTH(launchers); i++)
 	{
 		w = TEXTW(launchers[i].name);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, launchers[i].name, urg & 1 << i);
 		x += w;
 	}
-
+*/
   w = floatbar?mw + m->gappov * 2 - sw - stw - x:mw - sw - stw - x;
   if (w > bh_n) {
     if (m->sel) {
@@ -2473,9 +2491,9 @@ void propertynotify(XEvent *e) {
   }
 }
 
-void restart(const Arg *arg) {
-  running = 0;
-}
+//void restart(const Arg *arg) {
+//  running = 0;
+//}
 
 Client *
 recttoclient(int x, int y, int w, int h)
@@ -2880,6 +2898,8 @@ void setup(void) {
 
   /* clean up any zombies immediately */
   sigchld(0);
+  signal(SIGHUP, sighup);
+	signal(SIGTERM, sigterm);
 
   /* init screen */
   screen = DefaultScreen(dpy);
@@ -3004,6 +3024,10 @@ void showhide(Client *c) {
   if (!c)
     return;
   if (ISVISIBLE(c)) {
+    if ((c->tags & SPTAGMASK) && c->isfloating) {
+			c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
+			c->y = c->mon->wy + (c->mon->wh / 2 - HEIGHT(c) / 2);
+		}
     /* show clients top down */
     XMoveWindow(dpy, c->win, c->x, c->y);
     if ((!c->mon->lt[c->mon->sellt]->arrange || c->isfloating) &&
@@ -3034,6 +3058,26 @@ showtagpreview(int tag)
 		XUnmapWindow(dpy, selmon->tagwin);
 }
 
+void
+sighup(int unused)
+{
+	Arg a = {.i = 1};
+	quit(&a);
+}
+
+void
+sigterm(int unused)
+{
+	Arg a = {.i = 0};
+	quit(&a);
+}
+
+void
+quit(const Arg *arg)
+{
+	if(arg->i) restart = 1;
+  running = 0;
+}
 
 void sigchld(int unused) {
   if (signal(SIGCHLD, sigchld) == SIG_ERR)
@@ -3041,7 +3085,6 @@ void sigchld(int unused) {
   while (0 < waitpid(-1, NULL, WNOHANG))
     ;
 }
-
 
 void spawn(const Arg *arg) {
   if (fork() == 0) {
@@ -3152,6 +3195,32 @@ void togglefloating(const Arg *arg) {
 void togglefullscr(const Arg *arg) {
   if (selmon->sel)
     setfullscreen(selmon->sel, !selmon->sel->isfullscreen);
+}
+
+void
+togglescratch(const Arg *arg)
+{
+	Client *c;
+	unsigned int found = 0;
+	unsigned int scratchtag = SPTAG(arg->ui);
+	Arg sparg = {.v = scratchpads[arg->ui].cmd};
+
+	for (c = selmon->clients; c && !(found = c->tags & scratchtag); c = c->next);
+	if (found) {
+		unsigned int newtagset = selmon->tagset[selmon->seltags] ^ scratchtag;
+		if (newtagset) {
+			selmon->tagset[selmon->seltags] = newtagset;
+			focus(NULL);
+			arrange(selmon);
+		}
+		if (ISVISIBLE(c)) {
+			focus(c);
+			restack(selmon);
+		}
+	} else {
+		selmon->tagset[selmon->seltags] |= scratchtag;
+		spawn(&sparg);
+	}
 }
 
 void toggletag(const Arg *arg) {
