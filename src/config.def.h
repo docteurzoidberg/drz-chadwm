@@ -67,16 +67,17 @@ typedef struct {
 } Sp;
 const char *spcmd1[] = {"st", "-n", "spterm", "-g", "120x34", NULL };
 const char *spcmd2[] = {"st", "-n", "spfm", "-g", "144x41", "-e", "ranger", NULL };
-const char *spcmd3[] = {"keepassxc", NULL };
+const char *spcmd3[] = {"/home/dev/vanassistant/bin/vanassistant", NULL };
+//const char *spcmd3[] = {"keepassxc", NULL };
 static Sp scratchpads[] = {
 	/* name          cmd  */
 	{"spterm",      spcmd1},
-	{"spranger",    spcmd2},
-	{"keepassxc",   spcmd3},
+	{"spranger",    spcmd2}
+//	{"keepassxc",   spcmd3},
 };
 
 /* tagging */
-static char *tags[] = {"", "󰨞", "", "", ""};
+static char *tags[] = {"", "󰨞", "", "", "󱎓"};
 
 static const char* st[] = { "st", NULL };
 
@@ -100,15 +101,19 @@ static const Rule rules[] = {
      *	WM_NAME(STRING) = title
      */
     /* class      instance    title       tags mask     iscentered   isfloating   monitor */ 
-    { "Firefox-esr",  NULL,       NULL,       1 << 2,       0,           0,           -1 },
-    { "Code",  NULL,       NULL,       1 << 1,       0,           0,           -1 },
-    //{ "cool-reto-term",  NULL,       NULL,       1 << 0,       0,           0,           -1 },  
-    { "st",  NULL,       NULL,       1 << 0,       0,           0,           -1 },
-    { "obsidian",  NULL,       NULL,       1 << 3,       0,           0,           -1 },
+    { "Firefox-esr",    NULL,       NULL,       1 << 2,       0,           0,           -1 },
+    { "Code",           NULL,       NULL,       1 << 1,       0,           0,           -1 },
+    //{ "cool-retro-term",  NULL,       NULL,       1 << 0,       0,           0,           -1 },  
+    { "st",             NULL,       NULL,       1 << 0,       0,           0,           -1 },
+    { "obsidian",       NULL,       NULL,       1 << 3,       0,           0,           -1 },
 
-    { NULL,		  "spterm",		NULL,		SPTAG(0),		1,			 -1 },
-	{ NULL,		  "spfm",		NULL,		SPTAG(1),		1,			 -1 },
-	{ NULL,		  "keepassxc",	NULL,		SPTAG(2),		0,			 -1 },
+    //{ "pge",            NULL,       NULL,       1 << 4,       0,           0,           -1 },
+    { NULL,		"olc",	NULL,	 1 << 4,		0,			 0 ,-1 },
+    { NULL,		NULL,		"olc",		 1 << 4,		0,			 0,-1  },
+
+    { NULL,		        "spterm",	NULL,		SPTAG(0),		1,			 -1 },
+	{ NULL,		        "spfm",		NULL,		SPTAG(1),		1,			 -1 },
+	//{ NULL,		  "keepassxc",	NULL,		SPTAG(2),		0,			 -1 },
 };
 
 /* layout(s) */
@@ -170,7 +175,7 @@ static const Key keys[] = {
         SHCMD("maim --select | xclip -selection clipboard -t image/png")},
 
     { MODKEY,                           XK_c,       spawn,          SHCMD("rofi -show drun") },
-    { MODKEY,                           XK_Return,  spawn,            SHCMD("st")},
+    { MODKEY,                           XK_Return,  spawn,          SHCMD("st")},
 
     // toggle stuff
     { MODKEY,                           XK_b,       togglebar,      {0} },
